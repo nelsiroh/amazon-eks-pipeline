@@ -14,14 +14,25 @@ variable "aws_region" {
 }
 
 variable "num_public_subnets" {
-  description = "Number of public subnets to create"
+  description = "Number of public subnets (must be between 2 and 14)"
   type        = number
+
+  validation {
+    condition     = var.num_public_subnets >= 2 && var.num_public_subnets <= 14
+    error_message = "The number of public subnets must be between 2 and 14."
+  }
 }
 
 variable "num_private_subnets" {
-  description = "Number of private subnets to create"
+  description = "Number of private subnets (must be between 2 and 14)"
   type        = number
+
+  validation {
+    condition     = var.num_private_subnets >= 2 && var.num_private_subnets <= 14
+    error_message = "The number of private subnets must be between 2 and 14."
+  }
 }
+
 
 variable "tags" {
   description = "Tags to apply to resources"

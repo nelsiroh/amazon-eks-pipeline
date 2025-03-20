@@ -4,12 +4,12 @@ variable "vpc_cidr" {
 }
 
 variable "num_public_subnets" {
-  description = "Number of public subnets"
+  description = "Number of public subnets (must be between 2 and 14)"
   type        = number
 }
 
 variable "num_private_subnets" {
-  description = "Number of private subnets"
+  description = "Number of private subnets (must be between 2 and 14)"
   type        = number
 }
 
