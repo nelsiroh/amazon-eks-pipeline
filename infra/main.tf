@@ -97,3 +97,40 @@ module "alb_sg" {
   allowed_cidr_block = "0.0.0.0/0" # Allow from anywhere for public access
   tags               = var.tags
 }
+
+# Amazon Certificate Manager (ACM) module declaration
+module "acm" {
+  source         = "../modules/acm"
+  name           = "main"
+  environment    = var.environment
+  domain_name    = "*.aethernubis.com"
+  san_names      = ["aethernubis.com"]
+  hosted_zone_id = var.route53_zone_id
+  tags           = var.tags
+}
+
+module "dns" {
+  source      = "../modules/route53"
+  domain_name = "aethernubis.com"
+
+  records = {
+    "www.aethernubis.com" = {
+      type    = "CNAME"
+      ttl     = 300
+      records = ["example-alb-123456.elb.amazonaws.com"]
+      alias   = null
+    },
+    "api.aethernubis.com" = {
+      type    = "A"
+      ttl     = 300
+      records = []
+      alias = {
+        name                   = module.alb.alb_dns_name
+        zone_id                = "Z35SXDOTRQ7X7K" # ALB zone ID
+        evaluate_target_health = false
+      }
+    }
+  }
+
+  tags = var.tags
+}

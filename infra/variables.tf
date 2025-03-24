@@ -52,3 +52,8 @@ variable "project_name" {
   description = "Project name for dynamic resource naming"
   type        = string
 }
+
+variable "route53_zone_id" {
+  type        = string
+  description = "The ID of the Route 53 hosted zone used for ACM DNS validation"
+}
