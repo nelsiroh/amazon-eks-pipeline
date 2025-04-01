@@ -126,11 +126,28 @@ module "dns" {
       records = []
       alias = {
         name                   = module.alb.alb_dns_name
-        zone_id                = "Z35SXDOTRQ7X7K" # ALB zone ID
+        zone_id                = module.alb.lb_zone_id
         evaluate_target_health = false
       }
+    }
+
+  }
+
+  tags = var.tags
+}
+
+module "tgw" {
+  source      = "../modules/tgw"
+  name        = "core"
+  environment = var.environment
+
+  attachments = {
+    dev = {
+      vpc_id     = module.vpc.vpc_id
+      subnet_ids = module.vpc.private_subnet_ids
     }
   }
 
   tags = var.tags
 }
+
