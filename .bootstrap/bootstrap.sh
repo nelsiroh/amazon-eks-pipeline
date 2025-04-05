@@ -3,7 +3,7 @@
 
 # Default values
 AWS_REGION="us-east-2"
-COMPANY_NAME="aethernubis"
+COMPANY_NAME="example_company"
 AWS_PROFILE="default" # Fallback to default AWS profile if not specified
 
 # Parse command-line arguments
