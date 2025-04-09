@@ -1,7 +1,7 @@
 # amazon-eks-pipeline
 Amazon EKS multi-environment pipeline with ArgoCD
 
-## AetherNubis LLC
+## Aether Nubis LLC
 A cloud consulting company.  "Aether Nubis" is **Latin** for "Ether of the Clouds".  
 AetherNubis LLC is cloud technology consulting company specializing in helping companies of all sizes navigate uncertainty to bring thier products to the cloud.
 
