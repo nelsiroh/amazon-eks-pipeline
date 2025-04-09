@@ -2,7 +2,7 @@
 Amazon EKS multi-environment pipeline with ArgoCD
 
 ## AetherNubis LLC
-A cloud consulting company.  "Aether Nubis" is quasi **Greek** and **Latin** for "Sky of the Clouds".  
+A cloud consulting company.  "Aether Nubis" is **Latin** for "Ether of the Clouds".  
 AetherNubis LLC is cloud technology consulting company specializing in helping companies of all sizes bring thier products to the cloud.
 
 ## Why
