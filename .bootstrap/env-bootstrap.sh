@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script bootstraps the project terraform variables from S3 to local directory structure
 # Usage: ./env-bootstrap.sh --region us-east-2 --profile aws-example-profile
 
 # Defaults
