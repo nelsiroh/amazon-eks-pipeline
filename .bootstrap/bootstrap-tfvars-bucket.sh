@@ -1,13 +1,10 @@
 #!/bin/bash
-# ** This needs reworking - it should prompt user for bucket name at runtime ***
-# This script creates the tfvars S3 bucket
-# Usage: ./bootstrap-tfvars-bucket.sh --profile adnubes-dev --region us-east-2
+# This script creates a secure S3 bucket for tfvars files
+# Usage: ./bootstrap-tfvars-bucket.sh --profile {aws-profile} --region {aws-region}
 
 # Defaults
 AWS_PROFILE="default"
 AWS_REGION="us-east-2"
-BUCKET_NAME="----"
-KMS_ALIAS="alias/----tfvars-key"
 
 # Parse CLI args
 while [[ "$#" -gt 0 ]]; do
@@ -19,7 +16,18 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-echo "🚀 Bootstrapping S3 bucket: s3://$BUCKET_NAME in region: $AWS_REGcalledION"
+# Prompt for S3 bucket name
+read -p "Enter the name of the S3 bucket to store tfvars (e.g., example-tfvars-bucket): " BUCKET_NAME
+if [[ -z "$BUCKET_NAME" ]]; then
+    echo "❌ Error: Bucket name cannot be empty."
+    exit 1
+fi
+
+# Derive KMS alias from bucket name
+BASENAME="${BUCKET_NAME%-tfvars*}"
+KMS_ALIAS="alias/${BASENAME}-tfvars-key"
+
+echo "🚀 Bootstrapping S3 bucket: s3://$BUCKET_NAME in region: $AWS_REGION"
 
 # Create KMS CMK if it doesn't exist
 if ! aws kms describe-key --key-id "$KMS_ALIAS" --region "$AWS_REGION" --profile "$AWS_PROFILE" 2>/dev/null; then
@@ -36,10 +44,13 @@ if ! aws kms describe-key --key-id "$KMS_ALIAS" --region "$AWS_REGION" --profile
     --target-key-id "$KMS_KEY_ID" \
     --region "$AWS_REGION" --profile "$AWS_PROFILE"
 else
-  KMS_KEY_ID=$(aws kms describe-key --key-id "$KMS_ALIAS" --region "$AWS_REGION" --profile "$AWS_PROFILE" --query "KeyMetadata.Arn" --output text)
+  echo "🔐 KMS alias already exists: $KMS_ALIAS"
+  KMS_KEY_ID=$(aws kms describe-key --key-id "$KMS_ALIAS" \
+    --region "$AWS_REGION" --profile "$AWS_PROFILE" \
+    --query "KeyMetadata.Arn" --output text)
 fi
 
-# Create the S3 bucket
+# Create the S3 bucket if it doesn't exist
 if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region "$AWS_REGION" --profile "$AWS_PROFILE" 2>/dev/null; then
   echo "📦 Creating bucket: $BUCKET_NAME"
   if [ "$AWS_REGION" = "us-east-1" ]; then
@@ -90,4 +101,4 @@ aws s3api put-public-access-block \
   }' \
   --region "$AWS_REGION" --profile "$AWS_PROFILE"
 
-echo "✅ S3 tfvars bucket setup complete: s3://$BUCKET_NAME"
+echo "✅ tfvars bucket setup complete: s3://$BUCKET_NAME"
