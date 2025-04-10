@@ -1,2 +1,3 @@
-account_id = ""
-environment = ""
+# # Use this file to add account-specific variables e.g. "dev"
+# account_id = ""
+# environment = "dev"
