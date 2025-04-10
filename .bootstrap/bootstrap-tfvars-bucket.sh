@@ -1,11 +1,13 @@
 #!/bin/bash
+# ** This needs reworking - it should prompt user for bucket name at runtime ***
+# This script creates the tfvars S3 bucket
 # Usage: ./bootstrap-tfvars-bucket.sh --profile adnubes-dev --region us-east-2
 
 # Defaults
 AWS_PROFILE="default"
 AWS_REGION="us-east-2"
-BUCKET_NAME="aethernubis-tfvars"
-KMS_ALIAS="alias/aethernubis-tfvars-key"
+BUCKET_NAME="----"
+KMS_ALIAS="alias/----tfvars-key"
 
 # Parse CLI args
 while [[ "$#" -gt 0 ]]; do
