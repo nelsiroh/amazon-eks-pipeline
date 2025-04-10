@@ -1,0 +1,23 @@
+# # Use this file to add environment-specific variables
+# # Project name (used for dynamic naming)
+# project_name = ""
+
+# # VPC CIDR block for this environment
+# # Example: vpc_cidr = "10.0.0.0/16"
+# # Recommend using a /16 CIDR block to allow for sufficient subnetting ip space
+# vpc_cidr = ""
+
+# # Number of public and private subnets (should match number of AZs), max 16 combined
+# num_public_subnets  = 2
+# num_private_subnets = 2
+
+# # Enable NAT Gateway for private subnets
+# enable_nat_gateway = true
+
+# # Tags applied to all AWS resources
+# tags = {
+#   Project     = ""
+#   Environment = "dev"
+#   ManagedBy   = "Terraform"
+#   Team        = ""
+# }

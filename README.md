@@ -27,6 +27,63 @@ This is my **Marquee Project**, designed to showcase the following:
     ├── kuttl          # KUTTL integration tests
     └── k6             # k6 performance tests
 ```
+### Why this design is better
+
+1. Environment Comes First = Human Clarity
+```
+Putting dev/ first means engineers can quickly find the relevant files for an environment they’re working on:
+
+environment/
+├── dev/
+│   ├── us-east-1/
+│   ├── us-east-2/
+│   └── us-west-2/
+├── staging/
+├── prod/
+
+This is how most teams think: “I’m working in dev, what region config do I need?”
+
+If you flip it to:
+
+environment/us-east-2/dev/
+
+Then engineers must look through regions first and hope the environment exists there. That’s cognitively harder and not how people plan infra.
+```
+2. Enables Clean Dev/Stage/Prod Workflows
+```
+You likely want:
+
+    Different variables per environment
+
+    Same regional support per environment
+
+By putting dev/ first, it implies a full replica of the project structure per environment — which helps you guarantee parity across environments.
+
+It also makes automation and CI/CD workflows easier:
+
+for env in dev staging prod; do
+  terraform plan -var-file=environment/$env/us-east-2/terraform.auto.tfvars
+done
+```
+3. Follows Terraform Best Practices
+```
+HashiCorp itself shows examples and tutorials that prioritize environment-first patterns.
+
+See the Terraform documentation and examples and patterns from real-world multi-env repos — they all tend to follow the:
+
+environment/<env>/<region>/... pattern.
+```
+4. It’s Easier to Template and Scale
+```
+If you later want to make a Terraform wrapper script or module generator, this is easier:
+
+ENV=$1
+REGION=$2
+TFVARS="environment/${ENV}/${REGION}/terraform.auto.tfvars"
+
+than needing to reverse REGION/ENV.
+```
+
 ## Quick Start
 
 ### Prerequisites
