@@ -12,7 +12,7 @@
 # num_private_subnets = 2
 
 # # Enable NAT Gateway for private subnets
-# enable_nat_gateway = true
+# enable_nat_gateway = false
 
 # # Tags applied to all AWS resources
 # tags = {

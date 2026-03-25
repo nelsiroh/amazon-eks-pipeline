@@ -1,7 +1,11 @@
-# Determine current AWS region
-data "aws_region" "current" {}
+locals {
+  cluster_name = "${var.project_name}-${var.environment}-${var.region}"
 
-# Virtual Private Cloud VPC module declaration
+  tags = merge(var.tags, {
+    Company = var.company_name
+  })
+}
+
 module "vpc" {
   source              = "../modules/vpc"
   vpc_cidr            = var.vpc_cidr
@@ -12,142 +16,50 @@ module "vpc" {
   enable_nat_gateway  = var.enable_nat_gateway
   project_name        = var.project_name
   company_name        = var.company_name
-  tags                = merge(var.tags, {
-    Company = var.company_name
-  })
+  tags                = local.tags
 }
 
-# Internet Gateway module declaration
 module "igw" {
   source      = "../modules/igw"
   vpc_id      = module.vpc.vpc_id
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 }
 
-# Network Address Translation Gateway (NAT Gateway) module declaration
-module "nat" {
-  source             = "../modules/nat"
-  environment        = var.environment
-  public_subnet_ids  = module.vpc.public_subnet_ids
-  tags               = var.tags
-}
-
-# Public Route Table module declaration
 module "rtb" {
-  source                  = "../modules/rtb"
-  vpc_id                  = module.vpc.vpc_id
-  igw_id                  = module.igw.igw_id
-  public_subnet_ids       = module.vpc.public_subnet_ids
-  private_subnet_ids      = module.vpc.private_subnet_ids
-  nat_gateway_id          = module.nat.nat_gateway_id
-  transit_gateway_id      = null # or add later
-  tgw_route_cidrs         = []
+  source                     = "../modules/rtb"
+  vpc_id                     = module.vpc.vpc_id
+  igw_id                     = module.igw.igw_id
+  public_subnet_ids          = module.vpc.public_subnet_ids
+  private_subnet_ids         = []
   create_public_route_table  = true
-  create_private_route_table = true
+  create_private_route_table = false
+  environment                = var.environment
+  tags                       = local.tags
+}
+
+module "eks" {
+  source                  = "../modules/eks"
+  cluster_name            = local.cluster_name
   environment             = var.environment
-  tags                    = var.tags
+  vpc_id                  = module.vpc.vpc_id
+  subnet_ids              = module.vpc.public_subnet_ids
+  kubernetes_version      = var.kubernetes_version
+  endpoint_public_access  = true
+  endpoint_private_access = false
+  tags                    = local.tags
 }
 
-# VPC Endoint Security Group module declaration
-module "vpc_endpoint_sg" {
-  source             = "../modules/sg"
-  name               = "vpce"
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  allowed_cidr_block = var.vpc_cidr
-  tags               = var.tags
+module "eks_node_group" {
+  source          = "../modules/eks_node_group"
+  cluster_name    = module.eks.cluster_name
+  subnet_ids      = module.vpc.public_subnet_ids
+  node_group_name = "general"
+  capacity_type   = "ON_DEMAND"
+  instance_types  = var.instance_types
+  desired_size    = 1
+  min_size        = 0
+  max_size        = 3
+  disk_size       = 30
+  tags            = local.tags
 }
-
-# VPC Endpoint module declaration
-module "vpce" {
-  source              = "../modules/vpce"
-  vpc_id              = module.vpc.vpc_id
-  region              = var.region
-  environment         = var.environment
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  route_table_ids     = [module.rtb.private_route_table_id]
-  security_group_id   = module.vpc_endpoint_sg.security_group_id
-
-  gateway_services    = ["s3"]
-  interface_services  = ["ssm", "ec2messages", "ssmmessages"]
-
-  tags                = var.tags
-}
-
-# Application Load Balancer (ALB) module declaration
-module "alb" {
-  source             = "../modules/alb"
-  name               = "web"
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  subnet_ids         = module.vpc.public_subnet_ids
-  security_group_id  = module.alb_sg.security_group_id
-  target_port        = 8080
-  health_check_path  = "/healthz"
-  tags               = var.tags
-}
-
-# ALB Security Group module declaration
-module "alb_sg" {
-  source             = "../modules/sg"
-  name               = "alb"
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  allowed_cidr_block = "0.0.0.0/0" # Allow from anywhere for public access
-  tags               = var.tags
-}
-
-# Amazon Certificate Manager (ACM) module declaration
-module "acm" {
-  source         = "../modules/acm"
-  name           = "main"
-  environment    = var.environment
-  domain_name    = "*.aethernubis.com"
-  san_names      = ["aethernubis.com"]
-  hosted_zone_id = var.route53_zone_id
-  tags           = var.tags
-}
-
-module "dns" {
-  source      = "../modules/route53"
-  domain_name = "aethernubis.com"
-
-  records = {
-    "www.aethernubis.com" = {
-      type    = "CNAME"
-      ttl     = 300
-      records = ["example-alb-123456.elb.amazonaws.com"]
-      alias   = null
-    },
-    "api.aethernubis.com" = {
-      type    = "A"
-      ttl     = 300
-      records = []
-      alias = {
-        name                   = module.alb.alb_dns_name
-        zone_id                = module.alb.lb_zone_id
-        evaluate_target_health = false
-      }
-    }
-
-  }
-
-  tags = var.tags
-}
-
-module "tgw" {
-  source      = "../modules/tgw"
-  name        = "core"
-  environment = var.environment
-
-  attachments = {
-    dev = {
-      vpc_id     = module.vpc.vpc_id
-      subnet_ids = module.vpc.private_subnet_ids
-    }
-  }
-
-  tags = var.tags
-}
-
