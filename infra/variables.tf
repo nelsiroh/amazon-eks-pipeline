@@ -13,18 +13,8 @@ variable "num_private_subnets" {
   type        = number
 }
 
-variable "tags" {
-  description = "Tags to apply to AWS resources"
-  type        = map(string)
-}
-
 variable "region" {
   description = "AWS Region"
-  type        = string
-}
-
-variable "account_id" {
-  description = "AWS Account ID"
   type        = string
 }
 
@@ -53,7 +43,17 @@ variable "project_name" {
   type        = string
 }
 
-variable "route53_zone_id" {
+variable "kubernetes_version" {
+  description = "Amazon EKS Kubernetes version for the cluster."
   type        = string
-  description = "The ID of the Route 53 hosted zone used for ACM DNS validation"
+}
+
+variable "instance_types" {
+  description = "EC2 instance types for the EKS managed node group."
+  type        = list(string)
+}
+
+variable "tags" {
+  description = "Tags to apply to AWS resources"
+  type        = map(string)
 }

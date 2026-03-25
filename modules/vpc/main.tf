@@ -1,12 +1,16 @@
-locals {
-  total_subnets = var.num_public_subnets + var.num_private_subnets
-}
-
+# modules/vpc/main.tf
 resource "aws_vpc" "this" {
   cidr_block = var.vpc_cidr
 
   enable_dns_support   = true
   enable_dns_hostnames = true
+
+  lifecycle {
+    precondition {
+      condition     = (var.num_public_subnets + var.num_private_subnets) <= 16
+      error_message = "The total number of public and private subnets must not exceed 16."
+    }
+  }
 
   tags = merge(var.tags, {
     Name    = "${var.environment}-vpc-${var.aws_region}"
@@ -17,15 +21,6 @@ resource "aws_vpc" "this" {
 # Get AWS Availability Zones dynamically
 data "aws_availability_zones" "available" {}
 
-# Enforce total_subnets <= 16 using a Terraform validation check
-resource "null_resource" "validate_total_subnets" {
-  count = local.total_subnets <= 16 ? 0 : 1
-
-  provisioner "local-exec" {
-    command = "echo 'Error: The total number of public and private subnets must not exceed 16. Found: ${local.total_subnets}' && exit 1"
-  }
-}
-
 # Public Subnets (dynamically generated)
 resource "aws_subnet" "public" {
   count = var.num_public_subnets
@@ -33,6 +28,7 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index) # Dynamic CIDR allocation
   availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
+  map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
     Name = "${var.environment}-public-subnet-${count.index + 1}"

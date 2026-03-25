@@ -24,12 +24,15 @@ variable "num_public_subnets" {
 }
 
 variable "num_private_subnets" {
-  description = "Number of private subnets (must be between 2 and 14)"
+  description = "Number of private subnets.  Use 0 for public-only ephemeral testing environments"
   type        = number
 
   validation {
-    condition     = var.num_private_subnets >= 2 && var.num_private_subnets <= 14
-    error_message = "The number of private subnets must be between 2 and 14."
+    condition     = (
+      var.num_private_subnets == 0 ||
+      var.num_private_subnets >= 2 && var.num_private_subnets <= 14
+    )
+    error_message = "The number of private subnets must be 0, or between 2 and 14."
   }
 }
 
