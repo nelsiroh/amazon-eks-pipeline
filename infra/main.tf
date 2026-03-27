@@ -1,9 +1,20 @@
+data "aws_caller_identity" "current" {}
+
 locals {
   cluster_name = "${var.project_name}-${var.environment}-${var.region}"
 
   tags = merge(var.tags, {
     Company = var.company_name
   })
+}
+
+resource "terraform_data" "account_guardrail" {
+  lifecycle {
+    precondition {
+      condition     = data.aws_caller_identity.current.account_id == var.account_id
+      error_message = "Configured account_id does not match the active AWS credentials."
+    }
+  }
 }
 
 module "vpc" {

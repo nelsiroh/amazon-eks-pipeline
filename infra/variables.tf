@@ -43,6 +43,11 @@ variable "project_name" {
   type        = string
 }
 
+variable "account_id" {
+  description = "Expected AWS account ID for this environment."
+  type        = string
+}
+
 variable "kubernetes_version" {
   description = "Amazon EKS Kubernetes version for the cluster."
   type        = string
